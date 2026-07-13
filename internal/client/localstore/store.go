@@ -3,6 +3,7 @@ package localstore
 
 import (
 	"database/sql"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,9 +13,15 @@ import (
 	"gophkeeper/internal/crypto"
 	"gophkeeper/internal/domain"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/sqlite"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/google/uuid"
 	_ "modernc.org/sqlite"
 )
+
+//go:embed migrations/*.sql
+var migrationsFS embed.FS
 
 // ErrNotFound — запись не найдена.
 var ErrNotFound = errors.New("item not found")
@@ -25,7 +32,7 @@ type Store struct {
 	password string
 }
 
-// Open открывает (или создаёт) локальную БД.
+// Open открывает (или создаёт) локальную БД и применяет миграции.
 func Open(path string) (*Store, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return nil, fmt.Errorf("mkdir: %w", err)
@@ -35,30 +42,40 @@ func Open(path string) (*Store, error) {
 		return nil, err
 	}
 	db.SetMaxOpenConns(1)
-	s := &Store{db: db}
-	if err := s.migrate(); err != nil {
+
+	if err := db.Ping(); err != nil {
 		_ = db.Close()
-		return nil, err
+		return nil, fmt.Errorf("ping sqlite: %w", err)
 	}
-	return s, nil
+
+	if err := runMigrations(db); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("migrate: %w", err)
+	}
+
+	return &Store{db: db}, nil
 }
 
-func (s *Store) migrate() error {
-	_, err := s.db.Exec(`
-CREATE TABLE IF NOT EXISTS meta (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS items (
-    id TEXT PRIMARY KEY,
-    version INTEGER NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    deleted INTEGER NOT NULL DEFAULT 0,
-    dirty INTEGER NOT NULL DEFAULT 0,
-    payload BLOB NOT NULL
-);
-`)
-	return err
+func runMigrations(db *sql.DB) error {
+	source, err := iofs.New(migrationsFS, "migrations")
+	if err != nil {
+		return fmt.Errorf("migration source: %w", err)
+	}
+
+	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
+	if err != nil {
+		return fmt.Errorf("sqlite migrate driver: %w", err)
+	}
+
+	m, err := migrate.NewWithInstance("iofs", source, "sqlite", driver)
+	if err != nil {
+		return fmt.Errorf("create migrator: %w", err)
+	}
+	// Не закрываем m через Close: драйвер шарит *sql.DB с Store.
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return err
+	}
+	return nil
 }
 
 // Close закрывает БД.
