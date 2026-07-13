@@ -3,7 +3,7 @@ package otp
 
 import (
 	"crypto/hmac"
-	"crypto/sha1"
+	"crypto/sha1" //nolint:gosec // HMAC-SHA1 is required by RFC 6238 for TOTP
 	"encoding/base32"
 	"encoding/binary"
 	"fmt"
@@ -30,7 +30,11 @@ func Generate(secret string, now time.Time, period uint, digits int) (string, er
 		return "", err
 	}
 
-	counter := uint64(now.Unix()) / uint64(period)
+	sec := now.Unix()
+	if sec < 0 {
+		sec = 0
+	}
+	counter := uint64(sec) / uint64(period)
 	return hotp(key, counter, digits), nil
 }
 

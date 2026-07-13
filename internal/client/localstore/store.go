@@ -142,7 +142,7 @@ SELECT id, version, updated_at, deleted, dirty, payload FROM items WHERE deleted
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var items []domain.LocalItem
 	for rows.Next() {
 		item, err := s.scanItem(rows)
@@ -161,7 +161,7 @@ SELECT id, version, updated_at, deleted, dirty, payload FROM items WHERE dirty =
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var items []domain.LocalItem
 	for rows.Next() {
 		item, err := s.scanItem(rows)

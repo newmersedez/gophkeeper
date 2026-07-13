@@ -93,7 +93,7 @@ func (a *API) auth(ctx context.Context, path, login, password string) (string, e
 	if err != nil {
 		return "", fmt.Errorf("request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	data, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
@@ -126,7 +126,7 @@ func (a *API) SyncJSON(ctx context.Context, req SyncRequest) (*SyncResponse, err
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	data, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s: %s", resp.Status, string(data))
@@ -166,7 +166,7 @@ func (a *API) SyncBinary(ctx context.Context, since time.Time, items []Item) (*S
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	data, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s: %s", resp.Status, string(data))
@@ -196,7 +196,7 @@ func (a *API) ListItems(ctx context.Context) ([]Item, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	data, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s: %s", resp.Status, string(data))

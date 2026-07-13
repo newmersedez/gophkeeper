@@ -1,5 +1,8 @@
 # GophKeeper
 
+[![Tests & Coverage](https://github.com/newmersedez/gophkeeper/actions/workflows/coverage.yml/badge.svg)](https://github.com/newmersedez/gophkeeper/actions/workflows/coverage.yml)
+[![golangci-lint](https://github.com/newmersedez/gophkeeper/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/newmersedez/gophkeeper/actions/workflows/golangci-lint.yml)
+
 Клиент-серверный менеджер паролей (финальный проект курса «Продвинутый Go-разработчик», Яндекс Практикум).
 
 ## Возможности
@@ -74,13 +77,18 @@ make build-client-all
 
 Версия и дата прошиваются через `-ldflags`.
 
-## Тесты и покрытие
+## Тесты, покрытие и линтер
 
 ```bash
 make test
 make coverage
 make coverage-check   # порог ≥75%
+make coverage-html
+make coverage-badge
+make lint             # golangci-lint
 ```
+
+CI (GitHub Actions): `coverage.yml`, `golangci-lint.yml`, `statictest.yml`.
 
 ## Безопасность
 

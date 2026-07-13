@@ -57,7 +57,7 @@ func (rt *Router) Routes() http.Handler {
 	r := chi.NewRouter()
 
 	r.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+		writeJSON(w, map[string]string{"status": "ok"})
 	})
 
 	r.Route("/api/v1", func(r chi.Router) {
@@ -122,7 +122,7 @@ func (rt *Router) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	writeJSON(w, http.StatusOK, tokenResponse{Token: token})
+	writeJSON(w, tokenResponse{Token: token})
 }
 
 // Login аутентифицирует пользователя.
@@ -155,7 +155,7 @@ func (rt *Router) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	writeJSON(w, http.StatusOK, tokenResponse{Token: token})
+	writeJSON(w, tokenResponse{Token: token})
 }
 
 type itemDTO struct {
@@ -220,7 +220,7 @@ func (rt *Router) ListItems(w http.ResponseWriter, r *http.Request) {
 	for _, it := range items {
 		out = append(out, vaultToDTO(it))
 	}
-	writeJSON(w, http.StatusOK, out)
+	writeJSON(w, out)
 }
 
 // GetItem возвращает одну запись.
@@ -245,7 +245,7 @@ func (rt *Router) GetItem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	writeJSON(w, http.StatusOK, vaultToDTO(*item))
+	writeJSON(w, vaultToDTO(*item))
 }
 
 // SyncJSON выполняет двустороннюю синхронизацию в JSON.
@@ -268,7 +268,7 @@ func (rt *Router) SyncJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	writeJSON(w, http.StatusOK, resp)
+	writeJSON(w, resp)
 }
 
 // SyncBinary выполняет синхронизацию через gob-бинарный протокол.
@@ -386,8 +386,8 @@ func vaultToDTO(item domain.VaultItem) itemDTO {
 	}
 }
 
-func writeJSON(w http.ResponseWriter, status int, v any) {
+func writeJSON(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
+	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(v)
 }
