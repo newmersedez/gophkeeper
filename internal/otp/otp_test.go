@@ -1,6 +1,7 @@
 package otp_test
 
 import (
+	"encoding/base32"
 	"testing"
 	"time"
 
@@ -10,11 +11,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// RFC 6238 test vector (SHA1, secret "12345678901234567890").
+// RFC 6238 test vector (SHA1, secret ASCII "12345678901234567890").
 func TestGenerateKnownVector(t *testing.T) {
 	t.Parallel()
 
-	secret := "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ" // base32 of "12345678901234567890"
+	// ggignore — публичный RFC 6238 test vector, не боевой секрет
+	secret := base32.StdEncoding.WithPadding(base32.NoPadding).
+		EncodeToString([]byte("12345678901234567890"))
 	ts := time.Unix(1111111109, 0).UTC()
 
 	code, err := otp.Generate(secret, ts, 30, 6)
@@ -25,7 +28,9 @@ func TestGenerateKnownVector(t *testing.T) {
 func TestVerify(t *testing.T) {
 	t.Parallel()
 
-	secret := "JBSWY3DPEHPK3PXP"
+	// ggignore — общеизвестный demo-секрет ("Hello!"), не боевой
+	secret := base32.StdEncoding.WithPadding(base32.NoPadding).
+		EncodeToString([]byte("Hello!"))
 	now := time.Now()
 	code, err := otp.Generate(secret, now, 30, 6)
 	require.NoError(t, err)

@@ -1,0 +1,7 @@
+# Конфиг GitGuardian / ggshield: тестовые OTP-векторы — не боевые секреты.
+version: 2
+
+paths-ignore:
+  - "**/internal/otp/otp_test.go"
+  - "**/internal/client/app/app_test.go"
+  - "**/internal/client/cli/cli_test.go"
