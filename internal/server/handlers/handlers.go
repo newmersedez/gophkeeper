@@ -29,6 +29,7 @@ type AuthStorage interface {
 // VaultStorage — хранилище записей сейфа.
 type VaultStorage interface {
 	UpsertItem(ctx context.Context, item *domain.VaultItem) error
+	SyncItems(ctx context.Context, userID uuid.UUID, since time.Time, items []domain.VaultItem) ([]domain.VaultItem, error)
 	ListItemsSince(ctx context.Context, userID uuid.UUID, since time.Time) ([]domain.VaultItem, error)
 	ListAllItems(ctx context.Context, userID uuid.UUID) ([]domain.VaultItem, error)
 	GetItem(ctx context.Context, userID, itemID uuid.UUID) (*domain.VaultItem, error)
@@ -328,17 +329,16 @@ func (rt *Router) SyncBinary(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rt *Router) doSync(r *http.Request, userID uuid.UUID, since time.Time, items []itemDTO) (syncResponseJSON, error) {
+	incoming := make([]domain.VaultItem, 0, len(items))
 	for _, dto := range items {
 		item, err := dtoToVault(userID, dto)
 		if err != nil {
 			continue
 		}
-		if err := rt.store.UpsertItem(r.Context(), item); err != nil {
-			return syncResponseJSON{}, err
-		}
+		incoming = append(incoming, *item)
 	}
 
-	serverItems, err := rt.store.ListItemsSince(r.Context(), userID, since)
+	serverItems, err := rt.store.SyncItems(r.Context(), userID, since, incoming)
 	if err != nil {
 		return syncResponseJSON{}, err
 	}

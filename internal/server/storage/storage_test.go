@@ -66,3 +66,35 @@ func TestStorageUsersAndItems(t *testing.T) {
 	_, err = s.GetItem(ctx, id, uuid.New())
 	assert.ErrorIs(t, err, storage.ErrItemNotFound)
 }
+
+func TestSyncItemsTransaction(t *testing.T) {
+	s := storage.OpenTest(t)
+	ctx := context.Background()
+
+	userID, err := s.CreateUser(ctx, "sync-user", "hash")
+	require.NoError(t, err)
+
+	firstID := uuid.New()
+	secondID := uuid.New()
+	now := time.Now().UTC()
+
+	items := []domain.VaultItem{
+		{ID: firstID, UserID: userID, Version: 1, UpdatedAt: now, Payload: []byte("a")},
+		{ID: secondID, UserID: userID, Version: 1, UpdatedAt: now.Add(time.Second), Payload: []byte("b")},
+	}
+
+	out, err := s.SyncItems(ctx, userID, time.Time{}, items)
+	require.NoError(t, err)
+	require.Len(t, out, 2)
+
+	stale := []domain.VaultItem{
+		{ID: firstID, UserID: userID, Version: 1, UpdatedAt: now, Payload: []byte("stale")},
+	}
+	_, err = s.SyncItems(ctx, userID, now.Add(time.Hour), stale)
+	require.NoError(t, err)
+
+	got, err := s.GetItem(ctx, userID, firstID)
+	require.NoError(t, err)
+	assert.Equal(t, []byte("a"), got.Payload)
+	assert.Equal(t, int64(1), got.Version)
+}

@@ -1,6 +1,7 @@
 # GophKeeper
 
 [![Tests & Coverage](https://github.com/newmersedez/gophkeeper/actions/workflows/coverage.yml/badge.svg)](https://github.com/newmersedez/gophkeeper/actions/workflows/coverage.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/newmersedez/gophkeeper/develop/.github/badges/coverage.json)](https://github.com/newmersedez/gophkeeper/actions/workflows/coverage.yml)
 [![golangci-lint](https://github.com/newmersedez/gophkeeper/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/newmersedez/gophkeeper/actions/workflows/golangci-lint.yml)
 
 Клиент-серверный менеджер паролей (финальный проект курса «Продвинутый Go-разработчик», Яндекс Практикум).

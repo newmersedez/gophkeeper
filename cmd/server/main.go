@@ -32,7 +32,7 @@ func main() {
 }
 
 func run() error {
-	cfg, err := config.NewConfig()
+	cfg, err := config.NewConfig(os.Args[1:])
 	if err != nil {
 		return fmt.Errorf("config: %w", err)
 	}
